@@ -8,14 +8,20 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.pro.service.CadastroService;
+
 @RestController
 @RequestMapping("/api/pdfbox")
 public class PDFBoxApi {
+
+	@Autowired
+	private CadastroService cadService;
 
 	@GetMapping({ "", "/" })
 	public String index() {
@@ -80,5 +86,22 @@ public class PDFBoxApi {
 		// Quando Conten-Disposition contem attachment ele faz o download automatico
 		return ResponseEntity.ok().header("Content-Type", "application/pdf")
 				.header("Content-Disposition", "attachment; filename=documento.pdf").body(pdfBytes);
+	}
+
+	@GetMapping("/cad-sample")
+	public ResponseEntity<byte[]> getCadastroSample() throws IOException {
+		PDDocument document = cadService.getCadastroSample();
+
+		// Criar um ByteArrayOutputStream para enviar os bytes do PDF
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		document.save(byteArrayOutputStream);
+		document.close();
+
+		// Converter para bytes e retornar como resposta
+		byte[] pdfBytes = byteArrayOutputStream.toByteArray();
+
+		// Quando Conten-Disposition contem inline ele mostra no browser
+		return ResponseEntity.ok().header("Content-Type", "application/pdf")
+				.header("Content-Disposition", "inline; filename=documento.pdf").body(pdfBytes);
 	}
 }
